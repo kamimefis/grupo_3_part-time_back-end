@@ -14,7 +14,11 @@ class Persona(db.Model):
     password = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(25), nullable=False)
+    telefono = db.Column(db.Integer, nullable=False)
     codigo = db.Column(db.Integer, nullable=False)
+    roles_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
+    rol = db.relationship('roles', backref=db.backref('rol', lazy=True))
+
     inscripciones = db.relationship('Lista_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
     def __repr__(self):
         return "<User %r>" % self.correo
@@ -58,6 +62,8 @@ class Restaurante(db.Model):
 class Roles(db.Model):
     id_roles = db.Column(db.Integer, primary_key=True)
     rol = db.Column(db.String(25), nullable=False)
+    relaciones = db.relationship('Relacion', backref='rol', lazy=True)
+
     def __repr__(self):
         return "<Roles %r>" % self.rol
     def serialize(self):
@@ -66,9 +72,9 @@ class Roles(db.Model):
             "rol":self.rol
         }
 class Relacion(db.Model):
-    id_relacion = db.Column(db.Integer, primary_key=True)
-    id_rol = db.Column(db.String(25), nullable=False)
-    id_paginas = db.Column(db.Integer, nullable=False)
+    id_relacion = db.Column(db.Integer, primary_key=True) 
+    id_paginas = db.Column(db.Integer, db.ForeignKey('paginas.id_paginas'), nullable=False)  
+    rol_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
     def __repr__(self):
         return "<Relacion %r>" % self.id
     def serialize(self):
@@ -81,6 +87,7 @@ class Paginas(db.Model):
     id_paginas = db.Column(db.Integer, primary_key=True)
     nombre_pagina = db.Column(db.String(50), nullable=False)
     ruta_pagina = db.Column(db.String(50), nullable=False)
+    relaciones = db.relationship('Relacion', backref='pag', lazy=True)
     def __repr__(self):
         return "<Paginas %r>" % self.nombre_pagina
     def serialize(self):
