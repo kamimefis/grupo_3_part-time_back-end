@@ -1,5 +1,8 @@
 import os
 import re
+#from flask_mysqldb import MySQL
+import pymysql
+pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
@@ -7,7 +10,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS 
 from flask_bcrypt import Bcrypt 
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
-from models import Persona, Roles, Lista_de_espera, Paginas, Restaurante, Relacion, db
+from models import Persona, db#, Roles, Lista_de_espera, Paginas, Restaurante, Relacion, db
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -36,7 +39,7 @@ def signup():
     persona = Persona()
     #Checar email, el que recibo del front end
     if re.search(email_reg, request.json.get("correo")):
-        persona.email= request.json.get("correo")
+        persona.correo= request.json.get("correo")
     else:
         return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
     #checar contraseña, la que recibo del front end
@@ -48,7 +51,8 @@ def signup():
     
     persona.username = request.json.get("username", None)
     persona.name = request.json.get("name")
-    persona.codigo = request.json.get("codigo_persona", 3)
+    persona.last_name = request.json.get("last_name")
+    persona.codigo = request.json.get("codigo", 3)
 
 
     db.session.add(persona)
