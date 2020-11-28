@@ -1,8 +1,8 @@
 import os
 import re
-#from flask_mysqldb import MySQL
-import pymysql
-pymysql.install_as_MySQLdb()
+from flask_mysqldb import MySQL
+# import pymysql
+# pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
@@ -10,7 +10,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS 
 from flask_bcrypt import Bcrypt 
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
-from models import Persona, db#, Roles, Lista_de_espera, Paginas, Restaurante, Relacion, db
+from models import Persona, db, Restaurante#, Roles, Lista_de_espera, Paginas, Relacion, db
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -61,6 +61,24 @@ def signup():
     db.session.commit()
 
     return jsonify({"success":True})
+
+
+@app.route("/addrestaurant", methods=["POST"])
+def addrestaurant():
+    #instanciando un nuevo restaurante:
+    restaurante= Restaurante()    
+    #Procesando las peticiones que recibe del front
+    restaurante.nombre= request.json.get("nombre")
+    restaurante.direccion= request.json.get("direccion")
+    restaurante.telefono= request.json.get("telefono")
+    restaurante.cantidad_maxima= request.json.get("numero_mesas")
+    restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+
+    db.session.add(restaurante)
+    db.session.commit()
+
+    return jsonify({"success":True})
+
 
 
 

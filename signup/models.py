@@ -50,7 +50,10 @@ class Lista_de_espera(db.Model):
 class Restaurante(db.Model):
     id_restaurante = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), nullable=False, unique=True)
+    direccion= db.Column(db.String(50), nullable=False)
+    telefono= db.Column(db.Integer, nullable=False)
     cantidad_maxima = db.Column(db.Integer, nullable=False)
+    capacidad_lista_espera= db.Column(db.Integer, nullable=False)
     lista = db.relationship('Lista_de_espera', backref='creador', uselist=False)
     def __repr__(self):
         return "<Restaurante %r>" % self.nombre
@@ -58,7 +61,10 @@ class Restaurante(db.Model):
         return {
             "id_restaurante":self.id_restaurante,
             "nombre":self.nombre,
-            "cantidad_maxima": self.cantidad_maxima
+            "cantidad_maxima": self.cantidad_maxima,
+            "direccion": self.direccion,
+            "telefono": self.telefono,
+            "capacidad_lista_espera": self.capacidad_lista_espera
         }
 class Roles(db.Model):
     id_roles = db.Column(db.Integer, primary_key=True)
