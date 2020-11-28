@@ -26,6 +26,7 @@ class Personas(db.Model):
         return {
             "id_persona":self.id_persona,
             "correo":self.correo,
+            "roles_id":self.roles_id,
             "usuario":self.usuario,
             "nombre":self.nombre,
             "apellido": self.apellido,
@@ -73,11 +74,11 @@ class Roles(db.Model):
     relaciones = db.relationship('Relaciones', backref='rol', lazy=True)
 
     def __repr__(self):
-        return "<Roles %r>" % self.rol
+        return "<Roles %r>" % self.nombre_rol
     def serialize(self):
         return {
             "id_roles":self.id_roles,
-            "rol":self.rol
+            "rol":self.nombre_rol
         }
 class Relaciones(db.Model):
     id_relacion = db.Column(db.Integer, primary_key=True) 
