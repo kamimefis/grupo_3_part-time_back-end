@@ -53,6 +53,7 @@ def signup():
     persona.name = request.json.get("name")
     persona.last_name = request.json.get("last_name")
     persona.codigo = request.json.get("codigo", 3)
+    persona.telefono = request.json.get("telefono")
 
 
     db.session.add(persona)
