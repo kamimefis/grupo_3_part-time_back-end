@@ -79,7 +79,34 @@ def addrestaurant():
 
     return jsonify({"success":True})
 
+@app.route("/login", methods =["POST"])
+def login():
+    #Validar que el json o el body del front no este vacia
+    if not request.is_json:
+        return jsonify({"msg": "El body o contenido esta vacío"}), 400
 
+    correo = request.json.get("correo", None)
+    password=request.json.get("password", None)
+
+    if not correo:
+        return jsonify({"msg":"Falta enviar el correo"}), 400
+    if not password: 
+        return jsonify({"msg":"Falta enviar la contraseña"}),400
+    
+    persona=Persona.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
+
+    if persona is None:
+        return jsonify({"msg":"Este usuario no está registrado"}),404
+
+    if bcrypt.check_password_hash(persona.password, password):
+        access_token = create_access_token(identity=correo)
+        return jsonify({
+            "access_token":access_token,
+            "user": persona.serialize(),
+            "success":True
+        }), 200
+    else:
+        return jsonify({"msg": "Contraseña erronea"}), 400
 
 
 if __name__ == "__main__":
