@@ -15,7 +15,7 @@ from models import Persona, db#, Roles, Lista_de_espera, Paginas, Restaurante, R
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uugolckfi3r7ndi8:uFPEk5YYKRbyuhfRaKYr@bt0g90jhwshtofahhgs4-mysql.services.clever-cloud.com/bt0g90jhwshtofahhgs4'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uugolckfi3r7ndi8:uFPEk5YYKRbyuhfRaKYr@bt0g90jhwshtofahhgs4-mysql.services.clever-cloud.com:3306/bt0g90jhwshtofahhgs4'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["DEBUG"] = True
 app.config["ENV"] = "development"
@@ -53,6 +53,7 @@ def signup():
     persona.name = request.json.get("name")
     persona.last_name = request.json.get("last_name")
     persona.codigo = request.json.get("codigo", 3)
+    persona.roles_id = request.json.get("roles_id", 3)
     persona.telefono = request.json.get("telefono")
 
 
