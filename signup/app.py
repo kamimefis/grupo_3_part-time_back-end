@@ -10,7 +10,7 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS 
 from flask_bcrypt import Bcrypt 
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
-from models import Persona, db, Restaurante#, Roles, Lista_de_espera, Paginas, Relacion, db
+from models import Personas, db, Restaurantes#, Roles, Lista_de_espera, Paginas, Relacion, db
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,29 +29,29 @@ jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
 CORS(app)
 
-@app.route("/signup", methods=["POST"])
+@app.route("/registro", methods=["POST"])
 def signup():
     #expresion regular para validar email
-    email_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+    correo_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
     #expresion regular para valdiad contraseña (8 caracteres,alphanumerico, 1 simbolo, 1 mayuscula)
-    password_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+    contraseña_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
     #Instancia un nuevo usuario
-    persona = Persona()
+    persona = Personas()
     #Checar email, el que recibo del front end
-    if re.search(email_reg, request.json.get("correo")):
+    if re.search(correo_reg, request.json.get("correo")):
         persona.correo= request.json.get("correo")
     else:
         return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
     #checar contraseña, la que recibo del front end
-    if re.search(password_reg, request.json.get("password")):
-        password_hash= bcrypt.generate_password_hash(request.json.get("password"))
-        persona.password = password_hash
+    if re.search(contraseña_reg, request.json.get("contraseña")):
+        contraseña_hash= bcrypt.generate_password_hash(request.json.get("contraseña"))
+        persona.contraseña = contraseña_hash
     else:
         return jsonify({"msg":"El formato de la contraseña no es válido"}), 401
     
-    persona.username = request.json.get("username", None)
-    persona.name = request.json.get("name")
-    persona.last_name = request.json.get("last_name")
+    persona.usuario = request.json.get("usuario", None)
+    persona.nombre = request.json.get("nombre")
+    persona.apellido = request.json.get("apellido")
     persona.codigo = request.json.get("codigo", 3)
     persona.roles_id = request.json.get("roles_id", 3)
     persona.telefono = request.json.get("telefono")
@@ -63,10 +63,10 @@ def signup():
     return jsonify({"success":True})
 
 
-@app.route("/addrestaurant", methods=["POST"])
+@app.route("/nuevo_restaurante", methods=["POST"])
 def addrestaurant():
     #instanciando un nuevo restaurante:
-    restaurante= Restaurante()    
+    restaurante= Restaurantes()    
     #Procesando las peticiones que recibe del front
     restaurante.nombre= request.json.get("nombre")
     restaurante.direccion= request.json.get("direccion")
@@ -79,30 +79,30 @@ def addrestaurant():
 
     return jsonify({"success":True})
 
-@app.route("/login", methods =["POST"])
+@app.route("/ingreso", methods =["POST"])
 def login():
     #Validar que el json o el body del front no este vacia
     if not request.is_json:
         return jsonify({"msg": "El body o contenido esta vacío"}), 400
 
     correo = request.json.get("correo", None)
-    password=request.json.get("password", None)
+    contraseña=request.json.get("contraseña", None)
 
     if not correo:
         return jsonify({"msg":"Falta enviar el correo"}), 400
-    if not password: 
+    if not contraseña: 
         return jsonify({"msg":"Falta enviar la contraseña"}),400
     
-    persona=Persona.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
+    persona=Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
 
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
 
-    if bcrypt.check_password_hash(persona.password, password):
+    if bcrypt.check_password_hash(persona.contraseña, contraseña):
         access_token = create_access_token(identity=correo)
         return jsonify({
-            "access_token":access_token,
-            "user": persona.serialize(),
+            "token_acceso":access_token,
+            "usuario": persona.serialize(),
             "success":True
         }), 200
     else:
