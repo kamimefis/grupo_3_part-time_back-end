@@ -4,41 +4,42 @@ db = SQLAlchemy()
 
 
 inscripcion = db.Table('inscripcion',
-    db.Column('id_persona',db.Integer, db.ForeignKey('persona.id_persona')),
-    db.Column('id_lista', db.Integer, db.ForeignKey('lista_de_espera.id_lista'))
+    db.Column('id_persona',db.Integer, db.ForeignKey('personas.id_persona')),
+    db.Column('id_lista', db.Integer, db.ForeignKey('listas_de_espera.id_lista'))
 )
 
-class Persona(db.Model):
+class Personas(db.Model):
     id_persona = db.Column(db.Integer, primary_key=True)
     correo = db.Column(db.String(50), nullable=False, unique=True)
-    username = db.Column(db.String(50), nullable=True, unique=True)
-    password = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(25), nullable=False)
+    usuario = db.Column(db.String(50), nullable=True, unique=True)
+    contraseña = db.Column(db.String(255), nullable=False)
+    nombre = db.Column(db.String(50), nullable=False)
+    apellido = db.Column(db.String(25), nullable=False)
     telefono = db.Column(db.Integer, nullable=False)
     codigo = db.Column(db.Integer, nullable=False)
     roles_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
 
-    inscripciones = db.relationship('Lista_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
+    inscripciones = db.relationship('Listas_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
     def __repr__(self):
-        return "<User %r>" % self.correo
+        return "<Personas %r>" % self.correo
     def serialize(self):
         return {
             "id_persona":self.id_persona,
             "correo":self.correo,
-            "username":self.username,
-            "name":self.name,
-            "last_name": self.last_name,
+            "roles_id":self.roles_id,
+            "usuario":self.usuario,
+            "nombre":self.nombre,
+            "apellido": self.apellido,
             "codigo": self.codigo,
             "telefono": self.telefono
         }
-class Lista_de_espera(db.Model):
+class Listas_de_espera(db.Model):
     id_lista = db.Column(db.Integer, primary_key=True) 
-    restaurante_id = db.Column(db.Integer, db.ForeignKey("restaurante.id_restaurante"), unique=True, nullable=False)
+    restaurante_id = db.Column(db.Integer, db.ForeignKey("restaurantes.id_restaurante"), unique=True, nullable=False)
     numero_mesas = db.Column(db.Integer, nullable=False)
     fecha = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     def __repr__(self):
-        return "<Lista_de_espera %r>" % self.id
+        return "<Listas_de_espera %r>" % self.id
     def serialize(self):
         return {
             "id_lista":self.id_lista,
@@ -47,16 +48,16 @@ class Lista_de_espera(db.Model):
             "numero_mesas": self.numero_mesas,
             "fecha": self.fecha
         }
-class Restaurante(db.Model):
+class Restaurantes(db.Model):
     id_restaurante = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), nullable=False, unique=True)
     direccion= db.Column(db.String(50), nullable=False)
     telefono= db.Column(db.Integer, nullable=False)
     cantidad_maxima = db.Column(db.Integer, nullable=False)
     capacidad_lista_espera= db.Column(db.Integer, nullable=False)
-    lista = db.relationship('Lista_de_espera', backref='creador', uselist=False)
+    lista = db.relationship('Listas_de_espera', backref='creador', uselist=False)
     def __repr__(self):
-        return "<Restaurante %r>" % self.nombre
+        return "<Restaurantes %r>" % self.nombre
     def serialize(self):
         return {
             "id_restaurante":self.id_restaurante,
@@ -69,22 +70,22 @@ class Restaurante(db.Model):
 class Roles(db.Model):
     id_roles = db.Column(db.Integer, primary_key=True)
     nombre_rol = db.Column(db.String(25), nullable=False)
-    personas = db.relationship('Persona', backref='rol', lazy=True)
-    relaciones = db.relationship('Relacion', backref='rol', lazy=True)
+    personas = db.relationship('Personas', backref='rol', lazy=True)
+    relaciones = db.relationship('Relaciones', backref='rol', lazy=True)
 
     def __repr__(self):
-        return "<Roles %r>" % self.rol
+        return "<Roles %r>" % self.nombre_rol
     def serialize(self):
         return {
             "id_roles":self.id_roles,
-            "rol":self.rol
+            "rol":self.nombre_rol
         }
-class Relacion(db.Model):
+class Relaciones(db.Model):
     id_relacion = db.Column(db.Integer, primary_key=True) 
     id_paginas = db.Column(db.Integer, db.ForeignKey('paginas.id_paginas'), nullable=False)  
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
     def __repr__(self):
-        return "<Relacion %r>" % self.id
+        return "<Relaciones %r>" % self.id
     def serialize(self):
         return {
             "id_relacion":self.id_relacion,
@@ -95,7 +96,7 @@ class Paginas(db.Model):
     id_paginas = db.Column(db.Integer, primary_key=True)
     nombre_pagina = db.Column(db.String(50), nullable=False)
     ruta_pagina = db.Column(db.String(50), nullable=False)
-    relaciones = db.relationship('Relacion', backref='pag', lazy=True)
+    relaciones = db.relationship('Relaciones', backref='pag', lazy=True)
     def __repr__(self):
         return "<Paginas %r>" % self.nombre_pagina
     def serialize(self):
