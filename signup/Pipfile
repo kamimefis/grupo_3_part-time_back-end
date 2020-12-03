@@ -14,6 +14,7 @@ flask-migrate = "*"
 flask-cors = "*"
 flask-jwt-extended = "*"
 flask-mysqldb = "*"
+flask-login = "*"
 
 [requires]
 python_version = "3.8"
