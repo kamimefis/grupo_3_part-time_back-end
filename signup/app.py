@@ -121,14 +121,13 @@ def login():
     if current_user.is_authenticated:
          return jsonify({"msg":"Authenticated"})
     
-    persona=Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
+    persona= Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
         access_token = create_access_token(identity=correo)
         login_user(persona)
-        # return redirect("https://www.google.com/", code=302)
-        # return redirect(url_for('login'))
+     
     
 
         
