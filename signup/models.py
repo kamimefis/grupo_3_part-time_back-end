@@ -1,16 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import inspect
+from flask_login import LoginManager,UserMixin
+
+
 
 db = SQLAlchemy()
-
 
 inscripcion = db.Table('inscripcion',
     db.Column('id_persona',db.Integer, db.ForeignKey('personas.id_persona')),
     db.Column('id_lista', db.Integer, db.ForeignKey('listas_de_espera.id_lista'))
 )
 
-class Personas(db.Model):
+class Personas(db.Model, UserMixin):
+    
     id_persona = db.Column(db.Integer, primary_key=True)
     correo = db.Column(db.String(50), nullable=False, unique=True)
     usuario = db.Column(db.String(50), nullable=True, unique=True)
@@ -20,14 +23,33 @@ class Personas(db.Model):
     telefono = db.Column(db.Integer, nullable=False)
     codigo = db.Column(db.Integer, nullable=False)
     roles_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
+    
 
     inscripciones = db.relationship('Listas_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
-    def __repr__(self):
-        return "<Personas %r>" % self.correo
+
+    def is_active(self):
+        # """True, as all users are active."""
+        return True
+
+    def get_id(self):
+        # """Return the email address to satisfy Flask-Login's requirements."""
+        return self.id_persona
+
+    def is_authenticated(self):
+        # """Return True if the user is authenticated."""
+        return True
+
+    def is_anonymous(self):
+        # """False, as anonymous users aren't supported."""
+        return False
+    def toDict(self): return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
+    # def __repr__(self):
+    #     return "<Personas %r>" % self.correo
     def serialize(self):
         return {
             "id_persona":self.id_persona,
             "correo":self.correo,
+            "roles_id":self.roles_id,
             "usuario":self.usuario,
             "nombre":self.nombre,
             "apellido": self.apellido,
@@ -77,11 +99,11 @@ class Roles(db.Model):
     relaciones = db.relationship('Relaciones', backref='rol', lazy=True)
 
     def __repr__(self):
-        return "<Roles %r>" % self.rol
+        return "<Roles %r>" % self.nombre_rol
     def serialize(self):
         return {
             "id_roles":self.id_roles,
-            "rol":self.rol
+            "rol":self.nombre_rol
         }
 class Relaciones(db.Model):
     id_relacion = db.Column(db.Integer, primary_key=True) 
