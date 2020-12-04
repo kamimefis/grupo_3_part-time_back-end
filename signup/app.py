@@ -1,13 +1,13 @@
 import os
 import re
-from flask_mysqldb import MySQL
+#from flask_mysqldb import MySQL
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from flask_cors import CORS 
+from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 from models import Personas, db, Restaurantes#, Roles, Lista_de_espera, Paginas, Relacion, db
@@ -60,7 +60,7 @@ def signup():
     db.session.add(persona)
     db.session.commit()
 
-    return jsonify({"success":True})
+    return jsonify({"success":True}), 200
 
 
 @app.route("/nuevo_restaurante", methods=["POST"])
@@ -77,7 +77,53 @@ def addrestaurant():
     db.session.add(restaurante)
     db.session.commit()
 
-    return jsonify({"success":True})
+    return jsonify({"success":True}), 200
+
+#obtener la lista de restaurantes
+@app.route('/restaurantes',methods=['GET'])
+def getRestaurantes():
+    restaurantes = Restaurantes.query.all()
+    restaurantesArr = []
+    for restaurante in restaurantes:
+        restaurantesArr.append(restaurante.toDict()) 
+    return jsonify(restaurantesArr), 200
+
+#obtener la informacion de un restaurante
+@app.route('/restaurantes/<int:id>',methods=['GET'])
+def getRestaurante(id):
+    restaurante = Restaurantes.query.get(id)
+    return jsonify({
+    "restaurante": restaurante.serialize(),
+    "success":True
+    }), 200
+
+#modifica un restaurante especifico
+@app.route('/restaurantes/<int:id>',methods=['PUT'])
+@cross_origin()
+def putRestaurante(id):
+    restaurante = Restaurantes.query.get(id)
+    print("restaurante conseguido", restaurante)
+
+    restaurante.nombre= request.json.get("nombre")
+    restaurante.direccion= request.json.get("direccion")
+    restaurante.telefono= request.json.get("telefono")
+    restaurante.cantidad_maxima= request.json.get("numero_mesas")
+    restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+
+    print("nuevo restaurante", restaurante)
+    db.session.add(restaurante)
+    db.session.commit()
+    return jsonify({
+        "success":True
+        }), 200
+@app.route("/restaurantes/<int:id>", methods=["DELETE"])
+@cross_origin()
+def deleteRestaurant(id):
+    restaurante = Restaurantes.query.get(id)
+
+    db.session.delete(restaurante)
+    db.session.commit()
+    return jsonify({"success":True}), 200
 
 @app.route("/ingreso", methods =["POST"])
 def login():

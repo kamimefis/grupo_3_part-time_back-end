@@ -1,5 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from sqlalchemy import inspect
+
 db = SQLAlchemy()
 
 
@@ -55,6 +57,8 @@ class Restaurantes(db.Model):
     cantidad_maxima = db.Column(db.Integer, nullable=False)
     capacidad_lista_espera= db.Column(db.Integer, nullable=False)
     lista = db.relationship('Listas_de_espera', backref='creador', uselist=False)
+    def toDict(self):
+        return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
     def __repr__(self):
         return "<Restaurantes %r>" % self.nombre
     def serialize(self):
