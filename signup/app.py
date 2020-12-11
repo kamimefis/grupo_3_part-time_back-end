@@ -89,7 +89,7 @@ def getPersonas():
         personaArr.append(persona.toDict()) 
      return jsonify(personaArr), 200
 
-    return jsonify({"success":True}), 200
+     return jsonify({"success":True}), 200
 
 
 @app.route("/registro/<int:id>", methods=["GET"])
@@ -156,6 +156,7 @@ def addrestaurant():
     restaurante.telefono= request.json.get("telefono")
     restaurante.cantidad_maxima= request.json.get("numero_mesas")
     restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+    restaurante.descripcion_rest= request.json.get("descripcion_rest")
 
     db.session.add(restaurante)
     db.session.commit()
@@ -207,6 +208,61 @@ def deleteRestaurant(id):
     db.session.delete(restaurante)
     db.session.commit()
     return jsonify({"success":True}), 200
+
+@app.route("/nuevalista", methods=["POST"])
+def nuevalista():
+    listaesp = Listas_de_espera()
+    listaesp.restaurante_id= request.json.get("restaurante_id")
+    db.session.add(listaesp)
+    db.session.commit()
+    return jsonify({"success":True})
+
+@app.route('/listasespera',methods=['GET'])
+def getListas():
+    listasesp = Listas_de_espera.query.all()
+    
+    listasArr = []
+    for lista in listasesp:
+        listasArr.append(lista.toDict()) 
+    return jsonify(listasArr), 200
+
+@app.route('/listasespera/<int:id>',methods=['GET'])
+def getLista(id):
+     listasesp = Personas()
+     getlista = listasesp.query.get(id)
+     
+     return jsonify(getlista.toDict()), 200
+    
+@app.route("/listas_persona", methods=["POST"])
+def listapersonas():
+    listapersonas = Personas_lista()
+    listapersonas.id_lista = request.json.get("id_lista")
+    listapersonas.id_personas = request.json.get("id_personas")
+
+    db.session.add(listapersonas)
+    db.session.commit()
+    return jsonify({"success":True})
+
+@app.route('/listas_persona',methods=['GET'])
+def getListaspersonas():
+    listapersonas = Personas_lista.query.all()
+    
+    listapersonasArr = []
+    for listap in listapersonas:
+        listapersonasArr.append(listap.toDict()) 
+    return jsonify(listapersonasArr), 200
+
+@app.route('/listas_persona/<int:id>',methods=['GET'])
+def getListapersona(id):
+    listapersonas = Personas_lista()
+    getlistap = listapersonas.query.get(id)
+
+    return jsonify(getlistap.toDict()), 200
+    
+    
+ 
+
+    
 
 if __name__ == "__main__":
     manager.run()

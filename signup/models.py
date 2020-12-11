@@ -2,15 +2,16 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy import inspect
 from flask_login import LoginManager,UserMixin
+from sqlalchemy.dialects.mysql import TIME
 
 
 
 db = SQLAlchemy()
 
-inscripcion = db.Table('inscripcion',
-    db.Column('id_persona',db.Integer, db.ForeignKey('personas.id_persona')),
-    db.Column('id_lista', db.Integer, db.ForeignKey('listas_de_espera.id_lista'))
-)
+# inscripcion = db.Table('inscripcion',
+#     db.Column('id_persona',db.Integer, db.ForeignKey('personas.id_persona')),
+#     db.Column('id_lista', db.Integer, db.ForeignKey('listas_de_espera.id_lista'))
+# )
 
 class Personas(db.Model, UserMixin):
     
@@ -23,9 +24,10 @@ class Personas(db.Model, UserMixin):
     telefono = db.Column(db.Integer, nullable=False)
     codigo = db.Column(db.Integer, nullable=False)
     roles_id = db.Column(db.Integer, db.ForeignKey('roles.id_roles'), nullable=False)
+    perso_listas= db.relationship("Personas_lista", backref="plistas")
     
 
-    inscripciones = db.relationship('Listas_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
+    # inscripciones = db.relationship('Listas_de_espera', secondary=inscripcion, backref=db.backref('integrantes'), lazy=True) 
 
     def is_active(self):
         # """True, as all users are active."""
@@ -56,27 +58,47 @@ class Personas(db.Model, UserMixin):
             "codigo": self.codigo,
             "telefono": self.telefono
         }
+        
 class Listas_de_espera(db.Model):
     id_lista = db.Column(db.Integer, primary_key=True) 
     restaurante_id = db.Column(db.Integer, db.ForeignKey("restaurantes.id_restaurante"), unique=True, nullable=False)
-    numero_mesas = db.Column(db.Integer, nullable=False)
     fecha = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    lista_listas= db.relationship("Personas_lista", backref="llistas")
+    def toDict(self):
+        return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
     def __repr__(self):
-        return "<Listas_de_espera %r>" % self.id
+        return "<Listas_de_espera %r>" % self.id_lista
     def serialize(self):
         return {
             "id_lista":self.id_lista,
             "id_persona":self.id_persona,
             "restaurante_id":self.restaurante_id,
-            "numero_mesas": self.numero_mesas,
             "fecha": self.fecha
         }
+class Personas_lista(db.Model):
+    id_personalista = db.Column(db.Integer, primary_key=True)
+    id_lista = db.Column(db.Integer, db.ForeignKey("listas_de_espera.id_lista"), nullable=False)
+    id_personas = db.Column(db.Integer, db.ForeignKey("personas.id_persona"), nullable=False)
+    hora = db.Column(TIME(), nullable=False)
+    def toDict(self):
+        return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
+    def __repr__(self):
+        return "Personas_lista %r>" % self.id_personalista
+    def serialize(self):
+        return {
+            "id_personalista":self.id_personalista,
+            "id_lista":self.id_lista,
+            "id_personas":self.id_personas,
+            "hora": self.hora
+        }
+
 class Restaurantes(db.Model):
     id_restaurante = db.Column(db.Integer, primary_key=True)
+    descripcion_rest = db.Column(db.string(1000), nullable=False)
     nombre = db.Column(db.String(50), nullable=False, unique=True)
     direccion= db.Column(db.String(50), nullable=False)
     telefono= db.Column(db.Integer, nullable=False)
-    cantidad_maxima = db.Column(db.Integer, nullable=False)
+    numero_mesas = db.Column(db.Integer, nullable=False)
     capacidad_lista_espera= db.Column(db.Integer, nullable=False)
     lista = db.relationship('Listas_de_espera', backref='creador', uselist=False)
     def toDict(self):
@@ -86,8 +108,9 @@ class Restaurantes(db.Model):
     def serialize(self):
         return {
             "id_restaurante":self.id_restaurante,
+            "descripcion_rest":self.descripcion_rest,
             "nombre":self.nombre,
-            "cantidad_maxima": self.cantidad_maxima,
+            "numero_mesas": self.numero_mesas,
             "direccion": self.direccion,
             "telefono": self.telefono,
             "capacidad_lista_espera": self.capacidad_lista_espera
