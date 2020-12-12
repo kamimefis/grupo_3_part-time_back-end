@@ -45,6 +45,7 @@ def load_user(user_id):
 #     return redirect("https://3000-eb757d8f-9d8d-44ab-9c5c-853c08773fa5.ws-us02.gitpod.io/home", code=302)
 ######CRUD PERSONAS######
 
+
 @app.route("/registro", methods=["POST"])
 def signup():
     #expresion regular para validar email
@@ -89,7 +90,7 @@ def getPersonas():
         personaArr.append(persona.toDict()) 
      return jsonify(personaArr), 200
 
-    return jsonify({"success":True}), 200
+     return jsonify({"success":True}), 200
 
 
 @app.route("/registro/<int:id>", methods=["GET"])
@@ -122,24 +123,26 @@ def login():
     if current_user.is_authenticated:
          return jsonify({"msg":"Authenticated"})
     
-    persona= Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
+    persona= Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia 
+
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
         access_token = create_access_token(identity=correo)
         login_user(persona)
-     
-    
-
-        
+ 
         return jsonify({
             "token_acceso":access_token,
             "usuario": persona.serialize(),
             "success":True
         }), 200
+          
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
+
+    
 # @app.route("/logout")
+#@login_required
 # def logout():
 #     logout_user()
 #     return jsonify({"msg": "Ha cerrado sesión correctamente"})
