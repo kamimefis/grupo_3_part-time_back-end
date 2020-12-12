@@ -1,7 +1,7 @@
 import os
 import re
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes#, Roles, Lista_de_espera, Paginas, Relacion, db
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect
@@ -12,6 +12,8 @@ from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from sqlalchemy  import create_engine, text
+
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -24,6 +26,8 @@ app.config["ENV"] = "development"
 app.config["JWT_SECRET_KEY"]= "23123nsdngh234341"
 app.secret_key = "97682sbdvffdvshg2662tvsncgaf25"
 
+engine = create_engine('mysql://uugolckfi3r7ndi8:uFPEk5YYKRbyuhfRaKYr@bt0g90jhwshtofahhgs4-mysql.services.clever-cloud.com:3306/bt0g90jhwshtofahhgs4')
+conn = engine.connect()
 
 db.init_app(app)
 Migrate(app, db)
@@ -89,7 +93,7 @@ def getPersonas():
         personaArr.append(persona.toDict()) 
      return jsonify(personaArr), 200
 
-    return jsonify({"success":True}), 200
+     return jsonify({"success":True}), 200
 
 
 @app.route("/registro/<int:id>", methods=["GET"])
@@ -154,8 +158,9 @@ def addrestaurant():
     restaurante.nombre= request.json.get("nombre")
     restaurante.direccion= request.json.get("direccion")
     restaurante.telefono= request.json.get("telefono")
-    restaurante.cantidad_maxima= request.json.get("numero_mesas")
+    restaurante.numero_mesas= request.json.get("numero_mesas")
     restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+    restaurante.descripcion_rest= request.json.get("descripcion_rest")
 
     db.session.add(restaurante)
     db.session.commit()
@@ -207,6 +212,69 @@ def deleteRestaurant(id):
     db.session.delete(restaurante)
     db.session.commit()
     return jsonify({"success":True}), 200
+
+@app.route("/nuevalista", methods=["POST"])
+def nuevalista():
+    listaesp = Listas_de_espera()
+    listaesp.restaurante_id= request.json.get("restaurante_id")
+    db.session.add(listaesp)
+    db.session.commit()
+    return jsonify({"success":True})
+
+@app.route('/listasespera',methods=['GET'])
+def getListas():
+    listasesp = Listas_de_espera.query.all()
+    
+    listasArr = []
+    for lista in listasesp:
+        listasArr.append(lista.toDict()) 
+    return jsonify(listasArr), 200
+
+@app.route('/listasespera/<int:id>',methods=['GET'])
+def getLista(id):
+     listasesp = Personas()
+     getlista = listasesp.query.get(id)
+     
+     return jsonify(getlista.toDict()), 200
+    
+@app.route("/listas_persona", methods=["POST"])
+def listapersonas():
+    listapersonas = Personas_lista()
+    listapersonas.id_lista = request.json.get("id_lista")
+    listapersonas.id_personas = request.json.get("id_personas")
+    listapersonas.hora = request.json.get("hora")
+    db.session.add(listapersonas)
+    db.session.commit()
+    return jsonify({"success":True})
+
+@app.route('/listas_persona',methods=['GET'])
+def getListaspersonas():
+    listapersonas = Personas_lista.query.all()
+    
+    listapersonasArr = []
+    for listap in listapersonas:
+        listapersonasArr.append(listap.toDict()) 
+    print(listapersonasArr)
+    return jsonify(listapersonasArr), 200
+
+@app.route('/engine', methods=['GET'])
+def getListapersona():
+    # listapersonas = Personas_lista()
+    # getlistap = listapersonas.query.get(id)
+    sql = text("SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas")
+    result = db.engine.execute(sql)
+    names = [row[3] for row in result]
+    print (names)
+    
+    
+    # SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas
+
+    # return jsonify(getlistap.toDict()), 200
+    
+    
+ 
+
+    
 
 if __name__ == "__main__":
     manager.run()
