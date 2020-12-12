@@ -1,7 +1,7 @@
 import os
 import re
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes#, Roles, Lista_de_espera, Paginas, Relacion, db
+from models import Personas,db, Restaurantes, Roles#Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect
@@ -261,11 +261,8 @@ def getListapersona(id):
     getlistap = listapersonas.query.get(id)
 
     return jsonify(getlistap.toDict()), 200
-    
-    
- 
 
-    
+
 
 if __name__ == "__main__":
     manager.run()

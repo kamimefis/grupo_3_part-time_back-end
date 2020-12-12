@@ -94,7 +94,7 @@ class Personas_lista(db.Model):
 
 class Restaurantes(db.Model):
     id_restaurante = db.Column(db.Integer, primary_key=True)
-    descripcion_rest = db.Column(db.string(1000), nullable=False)
+    descripcion_rest = db.Column(db.String(1000), nullable=False)
     nombre = db.Column(db.String(50), nullable=False, unique=True)
     direccion= db.Column(db.String(50), nullable=False)
     telefono= db.Column(db.Integer, nullable=False)
