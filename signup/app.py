@@ -4,15 +4,16 @@ import re
 from models import Personas,db, Restaurantes#, Roles, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
-from flask import Flask, jsonify, request, url_for, redirect
+from flask import Flask, jsonify, request, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
-
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, decode_token
+from flask_mail import Mail, Message
+import datetime
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -23,7 +24,7 @@ app.config["DEBUG"] = True
 app.config["ENV"] = "development"
 app.config["JWT_SECRET_KEY"]= "23123nsdngh234341"
 app.secret_key = "97682sbdvffdvshg2662tvsncgaf25"
-
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
 
 db.init_app(app)
 Migrate(app, db)
@@ -36,6 +37,15 @@ login_manager.login_view = 'ingreso'
 login_manager.login_message_category = 'info'
 
 CORS(app)
+
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT']=465
+app.config['MAIL_USERNAME']='restaurante.prueba02@gmail.com'
+app.config['MAIL_PASSWORD']='restaurante'
+app.config['MAIL_DEFAULT_SENDER'] = ('Restaurant App', 'restaurante.prueba02@gmail.com')
+app.config['MAIL_USE_TLS']=False
+app.config['MAIL_USE_SSL']=True
+mail = Mail(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -72,13 +82,10 @@ def signup():
     persona.roles_id = request.json.get("roles_id", 3)
     persona.telefono = request.json.get("telefono")
 
-
     db.session.add(persona)
     db.session.commit()
 
     return jsonify({"success":True}), 200
-
-
 
 @app.route("/registro", methods=["GET"])
 def getPersonas():
@@ -88,9 +95,6 @@ def getPersonas():
      for persona in personas: 
         personaArr.append(persona.toDict()) 
      return jsonify(personaArr), 200
-
-    return jsonify({"success":True}), 200
-
 
 @app.route("/registro/<int:id>", methods=["GET"])
 def getPersona(id):
@@ -107,7 +111,6 @@ def deletePersona(id):
      return jsonify({"done": True}), 200
 
 ##LOGIN PERSONAS##
-
 @app.route("/ingreso", methods =["POST"])
 def login():
     #Validar que el json o el body del front no este vacia
@@ -128,9 +131,6 @@ def login():
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
         access_token = create_access_token(identity=correo)
         login_user(persona)
-     
-    
-
         
         return jsonify({
             "token_acceso":access_token,
@@ -164,11 +164,13 @@ def addrestaurant():
 
 #obtener la lista de restaurantes
 @app.route('/restaurantes',methods=['GET'])
+@jwt_required
 def getRestaurantes():
     restaurantes = Restaurantes.query.all()
     restaurantesArr = []
     for restaurante in restaurantes:
         restaurantesArr.append(restaurante.toDict()) 
+    usuario_actual = get_jwt_identity() 
     return jsonify(restaurantesArr), 200
 
 #obtener la informacion de un restaurante
@@ -207,6 +209,55 @@ def deleteRestaurant(id):
     db.session.delete(restaurante)
     db.session.commit()
     return jsonify({"success":True}), 200
+
+
+#recuperar contraseña
+@app.route('/olvide_contraseña', methods=["POST"])
+def olvide_contrasena():
+    url = 'http://localhost:3000/restablecer_contraseña/'
+    correo = request.json.get("correo") 
+    if not correo:
+        return jsonify({"msg":"El correo no ha sido agregado"}), 400
+    persona = Personas.query.filter_by(correo=correo).first()
+    if persona is None:
+        return jsonify({"msg":"El correo ingresado no es valido"}),404
+    expiracion = datetime.timedelta(minutes=15)
+    restablecer_token = create_access_token(identity=str(persona.correo), expires_delta=expiracion)
+    usuario = persona.nombre
+    mensaje = Message('Restablecer contraseña ', recipients=[persona.correo])
+
+    mensaje.html = render_template('email/reset_password.html', usuario=usuario, url=url + restablecer_token)
+    mensaje.body = render_template('email/reset_password.txt', usuario=usuario, url=url + restablecer_token)
+
+    mail.send(mensaje)
+    return jsonify({
+        "success":True
+    })
+
+@app.route('/restablecer_contraseña', methods=["POST"])
+@jwt_required
+def restablecer_contraseña():
+    usuario_actual = get_jwt_identity()
+    contraseña = request.json.get('contraseña')
+    if not contraseña:
+       return jsonify({"msg":"No se ha indicado una contraseña"}), 400
+    persona = Personas.query.filter_by(correo=usuario_actual).first()
+    persona.contraseña = bcrypt.generate_password_hash(contraseña)
+    token_acceso = create_access_token(identity=persona.correo)
+    db.session.add(persona)
+    db.session.commit()
+    
+    mensaje = Message('Restablecer contraseña ', recipients=[persona.correo])
+    mensaje.html = f'<p style="font-size:16px;font-weight:400;font-family:"Lato",Tahoma,Verdana,Segoe,sans-serif;color:#000">\
+                    {persona.nombre}, su contraseña se ha restablecido exitosamente</p>'
+    mensaje.body = 'Su contraseña se ha restablecido exitosamente'
+    mail.send(mensaje)
+
+    return jsonify({
+            "token_acceso": token_acceso,
+            "usuario": persona.serialize(),
+            "success":True
+        }), 200
 
 if __name__ == "__main__":
     manager.run()
