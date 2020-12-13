@@ -1,11 +1,7 @@
 import os
 import re
 #from flask_mysqldb import MySQL
-<<<<<<< HEAD
-from models import Personas,db, Restaurantes, Roles#Lista_de_espera, Paginas, Relacion, db
-=======
-from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
->>>>>>> 72e90df43802898200d2d51b3b02b201e6ba8241
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles#, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect, render_template
@@ -64,7 +60,6 @@ def load_user(user_id):
 # def hello():
 #     return redirect("https://3000-eb757d8f-9d8d-44ab-9c5c-853c08773fa5.ws-us02.gitpod.io/home", code=302)
 ######CRUD PERSONAS######
-
 
 @app.route("/registro", methods=["POST"])
 def signup():
@@ -139,30 +134,21 @@ def login():
     if current_user.is_authenticated:
          return jsonify({"msg":"Authenticated"})
     
-    persona= Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia 
-
+    persona= Personas.query.filter_by(correo=correo).first()  #.first() --> primera coincidencia
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
         access_token = create_access_token(identity=correo)
         login_user(persona)
-<<<<<<< HEAD
- 
-=======
         
->>>>>>> 72e90df43802898200d2d51b3b02b201e6ba8241
         return jsonify({
             "token_acceso":access_token,
             "usuario": persona.serialize(),
             "success":True
         }), 200
-          
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
-
-    
 # @app.route("/logout")
-#@login_required
 # def logout():
 #     logout_user()
 #     return jsonify({"msg": "Ha cerrado sesión correctamente"})
@@ -329,25 +315,29 @@ def getListaspersonas():
     print(listapersonasArr)
     return jsonify(listapersonasArr), 200
 
-@app.route('/engine', methods=['GET'])
-def getListapersona():
-    """
-    listapersonas = Personas_lista()
-    getlistap = listapersonas.query.get(id)
-    sql = text("SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas")
-    result = db.engine.execute(sql)
-    names = [row[3] for row in result]
-    print (names)
+# @app.route('/engine/<int:id>', methods=['GET'])
+# def getListapersona(id):
+#     listapersonas = Personas_lista()
+#     getlistap = listapersonas.query.get(id)
+#     sql = text("SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas")
+#     result = db.engine.execute(sql)
+#     names = [row[0] for row in result]
+#     # names = [row for row in result if row['nombre']== id]
+#     # if (len(names)>0):
+#     #     return jsonify({"nombre": names[0]})
+#     print (names)
     # SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas
-    return jsonify(getlistap.toDict()), 200
-<<<<<<< HEAD
+    # return jsonify(getlistap.toDict()), 200
+
+    # return jsonify({"success":True})
 
 
+@app.route('/personas/paginas/<int:id_roles>', methods=['GET'])    
+def menu_paginas(id_roles):
+    roles= Roles()
+    get_menu= relaciones.query.get(id)
 
-=======
-    """
-    return jsonify({"success":True})
+
     
->>>>>>> 72e90df43802898200d2d51b3b02b201e6ba8241
 if __name__ == "__main__":
     manager.run()
