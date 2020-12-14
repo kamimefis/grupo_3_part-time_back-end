@@ -290,8 +290,13 @@ def getListas():
 
 @app.route('/listasespera/<int:id>',methods=['GET'])
 def getLista(id):
-     listasesp = Personas()
-     getlista = listasesp.query.get(id)
+     sql =text (f"SELECT listas_de_espera.id_lista,listas_de_espera.restaurante_id, listas_de_espera.fecha FROM listas_de_espera WHERE listas_de_espera.restaurante_id = {id}")
+     
+     result = db.engine.execute(sql)
+     getlista=[]
+     for r in result:
+        getlista.append(dict(r))     
+     return jsonify(getlista)
      
      return jsonify(getlista.toDict()), 200
     
@@ -327,7 +332,7 @@ def getListapersona():
 
 @app.route('/listapersonas/<int:id>', methods=['GET'])
 def getlistaperso(id):
-    sq="SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id"
+    sq="SELECT personas.id_persona, restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id"
     sql = text(f"{sq} INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas WHERE listas_de_espera.restaurante_id = {id}")
 
     result = db.engine.execute(sql)
