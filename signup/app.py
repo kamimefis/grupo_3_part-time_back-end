@@ -1,7 +1,7 @@
 import os
 import re
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles#, Lista_de_espera, Paginas, Relacion, db
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles, Paginas#, Lista_de_espera Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect, render_template
@@ -341,14 +341,6 @@ def getlistaperso(id):
     
     # names = [row[3] for row in result]
 
-@app.route('/<int:id>', methods= ['GET'])
-def get_pagina(id):
-    sql= "SELECT roles.nombre_rol, relaciones.rol_id, relaciones.id_paginas, paginas.ruta_pagina FROM relaciones INNER JOIN paginas ON relaciones.id_paginas= paginas.id_paginas INNER JOIN roles ON roles.id_roles= relaciones.rol_id WHERE relaciones.rol_id= {id};"
-    result= db.engine.execute(sql)
-    paginas=[]
-    for pagina in paginas:
-        paginas.append(dict(pagina))
-    return jsonify(paginas)
 
 
     
