@@ -290,8 +290,13 @@ def getListas():
 
 @app.route('/listasespera/<int:id>',methods=['GET'])
 def getLista(id):
-     listasesp = Personas()
-     getlista = listasesp.query.get(id)
+     sql =text (f"SELECT listas_de_espera.id_lista,listas_de_espera.restaurante_id, listas_de_espera.fecha FROM listas_de_espera WHERE listas_de_espera.restaurante_id = {id}")
+     
+     result = db.engine.execute(sql)
+     getlista=[]
+     for r in result:
+        getlista.append(dict(r))     
+     return jsonify(getlista)
      
      return jsonify(getlista.toDict()), 200
     
@@ -315,19 +320,34 @@ def getListaspersonas():
     print(listapersonasArr)
     return jsonify(listapersonasArr), 200
 
-@app.route('/engine', methods=['GET'])
+@app.route('/listapersonas', methods=['GET'])
 def getListapersona():
-    """
-    listapersonas = Personas_lista()
-    getlistap = listapersonas.query.get(id)
+
     sql = text("SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas")
     result = db.engine.execute(sql)
-    names = [row[3] for row in result]
-    print (names)
-    # SELECT restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas
-    return jsonify(getlistap.toDict()), 200
-    """
-    return jsonify({"success":True})
+    listas=[]
+    for r in result:
+        listas.append(dict(r))     
+    return jsonify(listas)
+
+@app.route('/listapersonas/<int:id>', methods=['GET'])
+def getlistaperso(id):
+    sq="SELECT personas.id_persona, restaurantes.nombre, listas_de_espera.id_lista, personas_lista.id_personalista, personas.nombre FROM listas_de_espera INNER JOIN restaurantes ON restaurantes.id_restaurante = listas_de_espera.restaurante_id"
+    sql = text(f"{sq} INNER JOIN personas_lista ON personas_lista.id_lista = listas_de_espera.id_lista INNER JOIN personas ON personas.id_persona = personas_lista.id_personas WHERE listas_de_espera.restaurante_id = {id}")
+
+    result = db.engine.execute(sql)
+    listas=[]
+    for r in result:
+        listas.append(dict(r))     
+    return jsonify(listas)
+
+
+    
+    
+    
+    # names = [row[3] for row in result]
+
+    
     
 if __name__ == "__main__":
     manager.run()

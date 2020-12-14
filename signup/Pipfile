@@ -16,6 +16,7 @@ flask-jwt-extended = "*"
 flask-mysqldb = "*"
 flask-login = "*"
 sqlalchemy = "*"
+flask-mail = "*"
 
 [requires]
 python_version = "3.8"
