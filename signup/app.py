@@ -341,6 +341,7 @@ def getlistaperso(id):
         listas.append(dict(r))     
     return jsonify(listas)
 
+
     
     
     
