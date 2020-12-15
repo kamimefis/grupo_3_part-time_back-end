@@ -17,6 +17,8 @@ flask-mysqldb = "*"
 flask-login = "*"
 sqlalchemy = "*"
 flask-mail = "*"
+python-dotenv = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.8"
