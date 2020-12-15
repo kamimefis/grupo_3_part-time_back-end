@@ -1,5 +1,7 @@
+from dotenv import load_dotenv
 import os
 import re
+from twilio.rest import Client
 #from flask_mysqldb import MySQL
 from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
@@ -16,10 +18,9 @@ from flask_mail import Mail, Message
 import datetime
 from sqlalchemy  import create_engine, text
 
-
-
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
+load_dotenv()
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uugolckfi3r7ndi8:uFPEk5YYKRbyuhfRaKYr@bt0g90jhwshtofahhgs4-mysql.services.clever-cloud.com:3306/bt0g90jhwshtofahhgs4'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -46,12 +47,32 @@ CORS(app)
 
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT']=465
-app.config['MAIL_USERNAME']='restaurante.prueba02@gmail.com'
-app.config['MAIL_PASSWORD']='restaurante'
-app.config['MAIL_DEFAULT_SENDER'] = ('Restaurant App', 'restaurante.prueba02@gmail.com')
+app.config['MAIL_USERNAME']= os.environ["EMAIL_ACCOUNT"]
+app.config['MAIL_PASSWORD']= os.environ["EMAIL_PASSWORD"]
+app.config['MAIL_DEFAULT_SENDER'] = ('Restaurant App', os.environ["EMAIL_ACCOUNT"])
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 mail = Mail(app)
+
+account_sid = os.environ["TWILIO_SID"]
+auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+
+@app.route("/ws", methods=["POST"])
+def ws():
+    usuario = request.json.get("usuario").capitalize()
+    restaurante = request.json.get("restaurante").capitalize()
+    numero = 971843668
+    direccion = request.json.get("direccion").capitalize()
+
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+         body=f"Saludos {usuario}, esta proximo su turno para entrar al establecimiento! \n{restaurante}, ubicacion: {direccion} \n--Restaurant App--",
+         from_='whatsapp:+14155238886',
+         to=f'whatsapp:+56{numero}'
+     )
+    print("ws msg",message.sid)
+    return jsonify({"success":True}), 200
+
 
 @login_manager.user_loader
 def load_user(user_id):
