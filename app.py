@@ -361,6 +361,13 @@ def getlistaperso(id):
     for r in result:
         listas.append(dict(r))     
     return jsonify(listas)
+@app.route('/deletelistapersonas/<int:id>', methods=['DELETE'])
+def deletelistaperso(id):
+    
+    sql = text(f"DELETE personas_lista FROM personas_lista WHERE id_personalista ={id}")
+    result = db.engine.execute(sql)
+  
+    return jsonify({"success":True}), 200
 
 
     
