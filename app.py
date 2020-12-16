@@ -159,7 +159,8 @@ def login():
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
-        access_token = create_access_token(identity=correo)
+        expiracion = datetime.timedelta(hours=24)
+        access_token = create_access_token(identity=correo, expires_delta=expiracion)
         login_user(persona)
         
         return jsonify({
@@ -274,7 +275,8 @@ def restablecer_contraseña():
        return jsonify({"msg":"No se ha indicado una contraseña"}), 400
     persona = Personas.query.filter_by(correo=usuario_actual).first()
     persona.contraseña = bcrypt.generate_password_hash(contraseña)
-    token_acceso = create_access_token(identity=persona.correo)
+    expiracion = datetime.timedelta(hours=24)
+    token_acceso = create_access_token(identity=persona.correo, expires_delta=expiracion)
     db.session.add(persona)
     db.session.commit()
     
