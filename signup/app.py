@@ -148,6 +148,7 @@ def login():
         }), 200
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
+
 # @app.route("/logout")
 # def logout():
 #     logout_user()
@@ -341,6 +342,14 @@ def getlistaperso(id):
         listas.append(dict(r))     
     return jsonify(listas)
 
+@app.route('/personas/rol/<int:id>', methods= ['GET'])
+def get_menu_dinamico(id):
+    sql= text(f"SELECT roles.nombre_rol, relaciones.rol_id, relaciones.id_paginas, paginas.ruta_pagina, paginas.nombre_pagina FROM relaciones INNER JOIN paginas ON relaciones.id_paginas= paginas.id_paginas INNER JOIN roles ON roles.id_roles= relaciones.rol_id WHERE relaciones.rol_id= {id}")
+    result= db.engine.execute(sql)
+    menu=[]
+    for r in result:
+        menu.append(dict(r))
+    return jsonify(menu)
 
     
     
