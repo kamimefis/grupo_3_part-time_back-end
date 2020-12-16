@@ -364,23 +364,15 @@ def getlistaperso(id):
         listas.append(dict(r))     
     return jsonify(listas)
 
-@app.route('/deletelistapersonas/<int:id>', methods=['DELETE'])
-def deletelistaperso(id):
+@app.route('/deletelistapersonas/<int:idlista>/<int:idpersonas>', methods=['DELETE'])
+def deletelistaperso(idlista,idpersonas):
     
-    sql = text(f"DELETE personas_lista FROM personas_lista WHERE id_personalista ={id}")
+    sql = text(f"DELETE personas_lista FROM personas_lista WHERE id_lista = {idlista} AND id_personas= {idpersonas}")
     result = db.engine.execute(sql)
   
     return jsonify({"success":True}), 200
 
-@app.route('/personaslista/<int:id>', methods=['GET'])
-def getpersonaenlista(id):
-    
-    sql = text(f"SELECT personas_lista.id_personalista, personas_lista.id_lista, personas_lista.id_personas FROM personas_lista WHERE personas_lista.id_personalista  = {id}")
-    result = db.engine.execute(sql)
-    listas=[]
-    for r in result:
-        listas.append(dict(r))     
-    return jsonify(listas)
+
     
     
     
