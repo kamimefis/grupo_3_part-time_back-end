@@ -468,15 +468,6 @@ def signup_recepcionista():
     return jsonify({"success":True}), 200    
 
 
-# @app.route("/registro_recepcionista/<int:id>", methods=["DELETE"])
-# @cross_origin()
-# def deleteRecepcionista(id):
-#     persona = Personas.query.get(id)
-
-#     db.session.delete(persona)
-#     db.session.commit()
-#     return jsonify({"success":True}), 200
-
 
     
 if __name__ == "__main__":
