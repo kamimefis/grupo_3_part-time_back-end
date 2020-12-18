@@ -187,7 +187,7 @@ def addrestaurant():
     restaurante.direccion= request.json.get("direccion")
     restaurante.telefono= request.json.get("telefono")
     restaurante.numero_mesas= request.json.get("numero_mesas")
-    restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+    restaurante.capacidad_lista_espera= request.json.get("capacidad_lista_espera")
     restaurante.descripcion_rest= request.json.get("descripcion_rest")
 
     db.session.add(restaurante)
@@ -224,8 +224,9 @@ def putRestaurante(id):
     restaurante.nombre= request.json.get("nombre")
     restaurante.direccion= request.json.get("direccion")
     restaurante.telefono= request.json.get("telefono")
-    restaurante.cantidad_maxima= request.json.get("numero_mesas")
-    restaurante.capacidad_lista_espera= request.json.get("cap_lista")
+    restaurante.numero_mesas= request.json.get("numero_mesas")
+    restaurante.capacidad_lista_espera= request.json.get("capacidad_lista_espera")
+    restaurante.descripcion_rest= request.json.get("descripcion_rest")
 
     print("nuevo restaurante", restaurante)
     db.session.add(restaurante)
@@ -241,7 +242,6 @@ def deleteRestaurant(id):
     db.session.delete(restaurante)
     db.session.commit()
     return jsonify({"success":True}), 200
-
 
 #-----recuperar contraseña-----
 @app.route('/olvide_contraseña', methods=["POST"])
@@ -291,6 +291,21 @@ def restablecer_contraseña():
             "usuario": persona.serialize(),
             "success":True
         }), 200
+#-----recepcionistas-----
+@app.route('/recepcionistas',methods=['GET'])
+def getRecepcionistas():
+    recepcionistas = Personas.query.filter_by(roles_id= 2).all()
+    recepcionistasArr = []
+    for recepcionista in recepcionistas:
+        recepcionistasArr.append(recepcionista.toDict()) 
+    return jsonify(recepcionistasArr), 200
+
+@app.route("/recepcionistas/<int:id>", methods=["DELETE"])
+def deleteRecepcionista(id):
+    recepcionista = Personas.query.get(id)
+    db.session.delete(recepcionista)
+    db.session.commit()
+    return jsonify({"success":True}), 200
 
 #-----lista de espera-----
 
