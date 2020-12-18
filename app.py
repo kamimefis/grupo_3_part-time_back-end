@@ -196,7 +196,6 @@ def addrestaurant():
 
 #obtener la lista de restaurantes
 @app.route('/restaurantes',methods=['GET'])
-@jwt_required
 def getRestaurantes():
     restaurantes = Restaurantes.query.all()
     restaurantesArr = []
