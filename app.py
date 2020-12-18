@@ -3,7 +3,7 @@ import os
 import re
 from twilio.rest import Client
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles, Paginas#, Lista_de_espera Relacion, db
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect, render_template
@@ -170,7 +170,6 @@ def login():
         }), 200
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
-
 # @app.route("/logout")
 # def logout():
 #     logout_user()
@@ -374,7 +373,9 @@ def deletelistaperso(idlista,idpersonas):
     return jsonify({"success":True}), 200
 
 
-    
+
+
+
     # names = [row[3] for row in result]
 
 @app.route('/personas/rol/<int:id>', methods= ['GET'])
@@ -408,6 +409,8 @@ def signup_admin():
     
     persona.nombre = request.json.get("nombre")
     persona.apellido = request.json.get("apellido")
+    persona.correo = request.json.get("correo")
+    persona.contraseña = request.json.get("contraseña")
     persona.codigo = request.json.get("codigo", 3)
     persona.roles_id = request.json.get("roles_id", 1)
     persona.telefono = request.json.get("telefono")
@@ -439,6 +442,8 @@ def signup_recepcionista():
     
     persona.nombre = request.json.get("nombre")
     persona.apellido = request.json.get("apellido")
+    persona.correo = request.json.get("correo")
+    persona.contraseña = request.json.get("contraseña")
     persona.codigo = request.json.get("codigo", 3)
     persona.roles_id = request.json.get("roles_id", 2)
     persona.telefono = request.json.get("telefono")
@@ -448,6 +453,15 @@ def signup_recepcionista():
 
     return jsonify({"success":True}), 200    
 
+
+# @app.route("/registro_recepcionista/<int:id>", methods=["DELETE"])
+# @cross_origin()
+# def deleteRecepcionista(id):
+#     persona = Personas.query.get(id)
+
+#     db.session.delete(persona)
+#     db.session.commit()
+#     return jsonify({"success":True}), 200
 
 
     
