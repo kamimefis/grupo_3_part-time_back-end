@@ -409,6 +409,8 @@ def signup_admin():
     
     persona.nombre = request.json.get("nombre")
     persona.apellido = request.json.get("apellido")
+    persona.correo = request.json.get("correo")
+    persona.contraseña = request.json.get("contraseña")
     persona.codigo = request.json.get("codigo", 3)
     persona.roles_id = request.json.get("roles_id", 1)
     persona.telefono = request.json.get("telefono")
@@ -440,6 +442,8 @@ def signup_recepcionista():
     
     persona.nombre = request.json.get("nombre")
     persona.apellido = request.json.get("apellido")
+    persona.correo = request.json.get("correo")
+    persona.contraseña = request.json.get("contraseña")
     persona.codigo = request.json.get("codigo", 3)
     persona.roles_id = request.json.get("roles_id", 2)
     persona.telefono = request.json.get("telefono")
@@ -449,6 +453,15 @@ def signup_recepcionista():
 
     return jsonify({"success":True}), 200    
 
+
+# @app.route("/registro_recepcionista/<int:id>", methods=["DELETE"])
+# @cross_origin()
+# def deleteRecepcionista(id):
+#     persona = Personas.query.get(id)
+
+#     db.session.delete(persona)
+#     db.session.commit()
+#     return jsonify({"success":True}), 200
 
 
     
