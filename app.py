@@ -1,5 +1,7 @@
+from dotenv import load_dotenv
 import os
 import re
+from twilio.rest import Client
 #from flask_mysqldb import MySQL
 from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles, Paginas#, Lista_de_espera Relacion, db
 # import pymysql
@@ -16,10 +18,9 @@ from flask_mail import Mail, Message
 import datetime
 from sqlalchemy  import create_engine, text
 
-
-
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
+load_dotenv()
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://uugolckfi3r7ndi8:uFPEk5YYKRbyuhfRaKYr@bt0g90jhwshtofahhgs4-mysql.services.clever-cloud.com:3306/bt0g90jhwshtofahhgs4'
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -46,12 +47,32 @@ CORS(app)
 
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT']=465
-app.config['MAIL_USERNAME']='restaurante.prueba02@gmail.com'
-app.config['MAIL_PASSWORD']='restaurante'
-app.config['MAIL_DEFAULT_SENDER'] = ('Restaurant App', 'restaurante.prueba02@gmail.com')
+app.config['MAIL_USERNAME']= os.environ["EMAIL_ACCOUNT"]
+app.config['MAIL_PASSWORD']= os.environ["EMAIL_PASSWORD"]
+app.config['MAIL_DEFAULT_SENDER'] = ('Restaurant App', os.environ["EMAIL_ACCOUNT"])
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 mail = Mail(app)
+
+account_sid = os.environ["TWILIO_SID"]
+auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+
+@app.route("/ws", methods=["POST"])
+def ws():
+    usuario = request.json.get("usuario").capitalize()
+    restaurante = request.json.get("restaurante").capitalize()
+    numero = 971843668
+    direccion = request.json.get("direccion").capitalize()
+
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+         body=f"Saludos {usuario}, esta proximo su turno para entrar al establecimiento! \n{restaurante}, ubicacion: {direccion} \n--Restaurant App--",
+         from_='whatsapp:+14155238886',
+         to=f'whatsapp:+56{numero}'
+     )
+    print("ws msg",message.sid)
+    return jsonify({"success":True}), 200
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -138,7 +159,8 @@ def login():
     if persona is None:
         return jsonify({"msg":"Este usuario no está registrado"}),404
     if bcrypt.check_password_hash(persona.contraseña, contraseña):
-        access_token = create_access_token(identity=correo)
+        expiracion = datetime.timedelta(hours=24)
+        access_token = create_access_token(identity=correo, expires_delta=expiracion)
         login_user(persona)
         
         return jsonify({
@@ -254,7 +276,8 @@ def restablecer_contraseña():
        return jsonify({"msg":"No se ha indicado una contraseña"}), 400
     persona = Personas.query.filter_by(correo=usuario_actual).first()
     persona.contraseña = bcrypt.generate_password_hash(contraseña)
-    token_acceso = create_access_token(identity=persona.correo)
+    expiracion = datetime.timedelta(hours=24)
+    token_acceso = create_access_token(identity=persona.correo, expires_delta=expiracion)
     db.session.add(persona)
     db.session.commit()
     
@@ -342,9 +365,88 @@ def getlistaperso(id):
         listas.append(dict(r))     
     return jsonify(listas)
 
+@app.route('/deletelistapersonas/<int:idlista>/<int:idpersonas>', methods=['DELETE'])
+def deletelistaperso(idlista,idpersonas):
+    
+    sql = text(f"DELETE personas_lista FROM personas_lista WHERE id_lista = {idlista} AND id_personas= {idpersonas}")
+    result = db.engine.execute(sql)
+  
+    return jsonify({"success":True}), 200
+
 
     
     # names = [row[3] for row in result]
+
+@app.route('/personas/rol/<int:id>', methods= ['GET'])
+def get_menu_dinamico(id):
+    sql= text(f"SELECT roles.nombre_rol, relaciones.rol_id, relaciones.id_paginas, paginas.ruta_pagina, paginas.nombre_pagina FROM relaciones INNER JOIN paginas ON relaciones.id_paginas= paginas.id_paginas INNER JOIN roles ON roles.id_roles= relaciones.rol_id WHERE relaciones.rol_id= {id}")
+    result= db.engine.execute(sql)
+    menu=[]
+    for r in result:
+        menu.append(dict(r))
+    return jsonify(menu)
+
+@app.route("/registro_admin", methods=["POST"])
+def signup_admin():
+    #expresion regular para validar email
+    correo_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+    #expresion regular para valdiad contraseña (8 caracteres,alphanumerico, 1 simbolo, 1 mayuscula)
+    contraseña_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+    #Instancia un nuevo usuario
+    persona = Personas()
+    #Checar email, el que recibo del front end
+    if re.search(correo_reg, request.json.get("correo")):
+        persona.correo= request.json.get("correo")
+    else:
+        return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
+    #checar contraseña, la que recibo del front end
+    if re.search(contraseña_reg, request.json.get("contraseña")):
+        contraseña_hash= bcrypt.generate_password_hash(request.json.get("contraseña"))
+        persona.contraseña = contraseña_hash
+    else:
+        return jsonify({"msg":"El formato de la contraseña no es válido"}), 401
+    
+    persona.nombre = request.json.get("nombre")
+    persona.apellido = request.json.get("apellido")
+    persona.codigo = request.json.get("codigo", 3)
+    persona.roles_id = request.json.get("roles_id", 1)
+    persona.telefono = request.json.get("telefono")
+
+    db.session.add(persona)
+    db.session.commit()
+    return jsonify({"success":True}), 200
+    
+
+@app.route("/registro_recepcionista", methods=["POST"])
+def signup_recepcionista():
+    #expresion regular para validar email
+    correo_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+    #expresion regular para valdiad contraseña (8 caracteres,alphanumerico, 1 simbolo, 1 mayuscula)
+    contraseña_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+    #Instancia un nuevo usuario
+    persona = Personas()
+    #Checar email, el que recibo del front end
+    if re.search(correo_reg, request.json.get("correo")):
+        persona.correo= request.json.get("correo")
+    else:
+        return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
+    #checar contraseña, la que recibo del front end
+    if re.search(contraseña_reg, request.json.get("contraseña")):
+        contraseña_hash= bcrypt.generate_password_hash(request.json.get("contraseña"))
+        persona.contraseña = contraseña_hash
+    else:
+        return jsonify({"msg":"El formato de la contraseña no es válido"}), 401
+    
+    persona.nombre = request.json.get("nombre")
+    persona.apellido = request.json.get("apellido")
+    persona.codigo = request.json.get("codigo", 3)
+    persona.roles_id = request.json.get("roles_id", 2)
+    persona.telefono = request.json.get("telefono")
+
+    db.session.add(persona)
+    db.session.commit()    
+
+    return jsonify({"success":True}), 200    
 
 
 
