@@ -3,7 +3,7 @@ import os
 import re
 from twilio.rest import Client
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles, Paginas#, Lista_de_espera Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect, render_template
@@ -170,6 +170,7 @@ def login():
         }), 200
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
+
 # @app.route("/logout")
 # def logout():
 #     logout_user()
@@ -373,11 +374,81 @@ def deletelistaperso(idlista,idpersonas):
 
 
     
-    
-    
     # names = [row[3] for row in result]
 
+@app.route('/personas/rol/<int:id>', methods= ['GET'])
+def get_menu_dinamico(id):
+    sql= text(f"SELECT roles.nombre_rol, relaciones.rol_id, relaciones.id_paginas, paginas.ruta_pagina, paginas.nombre_pagina FROM relaciones INNER JOIN paginas ON relaciones.id_paginas= paginas.id_paginas INNER JOIN roles ON roles.id_roles= relaciones.rol_id WHERE relaciones.rol_id= {id}")
+    result= db.engine.execute(sql)
+    menu=[]
+    for r in result:
+        menu.append(dict(r))
+    return jsonify(menu)
+
+@app.route("/registro_admin", methods=["POST"])
+def signup_admin():
+    #expresion regular para validar email
+    correo_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+    #expresion regular para valdiad contraseña (8 caracteres,alphanumerico, 1 simbolo, 1 mayuscula)
+    contraseña_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+    #Instancia un nuevo usuario
+    persona = Personas()
+    #Checar email, el que recibo del front end
+    if re.search(correo_reg, request.json.get("correo")):
+        persona.correo= request.json.get("correo")
+    else:
+        return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
+    #checar contraseña, la que recibo del front end
+    if re.search(contraseña_reg, request.json.get("contraseña")):
+        contraseña_hash= bcrypt.generate_password_hash(request.json.get("contraseña"))
+        persona.contraseña = contraseña_hash
+    else:
+        return jsonify({"msg":"El formato de la contraseña no es válido"}), 401
     
+    persona.nombre = request.json.get("nombre")
+    persona.apellido = request.json.get("apellido")
+    persona.codigo = request.json.get("codigo", 3)
+    persona.roles_id = request.json.get("roles_id", 1)
+    persona.telefono = request.json.get("telefono")
+
+    db.session.add(persona)
+    db.session.commit()
+    return jsonify({"success":True}), 200
+    
+
+@app.route("/registro_recepcionista", methods=["POST"])
+def signup_recepcionista():
+    #expresion regular para validar email
+    correo_reg= "^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+    #expresion regular para valdiad contraseña (8 caracteres,alphanumerico, 1 simbolo, 1 mayuscula)
+    contraseña_reg= "^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$"
+    #Instancia un nuevo usuario
+    persona = Personas()
+    #Checar email, el que recibo del front end
+    if re.search(correo_reg, request.json.get("correo")):
+        persona.correo= request.json.get("correo")
+    else:
+        return jsonify({"msg": "Este correo no tiene un formato válido"}), 401
+    #checar contraseña, la que recibo del front end
+    if re.search(contraseña_reg, request.json.get("contraseña")):
+        contraseña_hash= bcrypt.generate_password_hash(request.json.get("contraseña"))
+        persona.contraseña = contraseña_hash
+    else:
+        return jsonify({"msg":"El formato de la contraseña no es válido"}), 401
+    
+    persona.nombre = request.json.get("nombre")
+    persona.apellido = request.json.get("apellido")
+    persona.codigo = request.json.get("codigo", 3)
+    persona.roles_id = request.json.get("roles_id", 2)
+    persona.telefono = request.json.get("telefono")
+
+    db.session.add(persona)
+    db.session.commit()    
+
+    return jsonify({"success":True}), 200    
+
+
+
     
 if __name__ == "__main__":
     manager.run()
