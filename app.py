@@ -3,7 +3,7 @@ import os
 import re
 from twilio.rest import Client
 #from flask_mysqldb import MySQL
-from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista, Relaciones, Roles, Paginas#, Lista_de_espera Relacion, db
+from models import Personas,db, Restaurantes, Listas_de_espera, Personas_lista#, Roles, Lista_de_espera, Paginas, Relacion, db
 # import pymysql
 # pymysql.install_as_MySQLdb()
 from flask import Flask, jsonify, request, url_for, redirect, render_template
@@ -170,7 +170,6 @@ def login():
         }), 200
     else:
         return jsonify({"msg": "Contraseña erronea"}), 400
-
 # @app.route("/logout")
 # def logout():
 #     logout_user()
@@ -374,7 +373,9 @@ def deletelistaperso(idlista,idpersonas):
     return jsonify({"success":True}), 200
 
 
-    
+
+
+
     # names = [row[3] for row in result]
 
 @app.route('/personas/rol/<int:id>', methods= ['GET'])
